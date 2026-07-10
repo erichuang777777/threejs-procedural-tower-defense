@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a0c12" />
+    <meta name="description" content="Onco Defense — 像素風醫療塔防：外科醫師 × 腫瘤團隊 vs 癌細胞。" />
+    <title>Onco Defense — 腫瘤攻防戰</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A9%BA%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./src/ui/game.css" />
+  </head>
+  <body>
+    <div id="hud">
+      <div id="topbar">
+        <div class="stat" id="statLives"><span class="ic">❤</span><b id="vLives">20</b></div>
+        <div class="stat" id="statDp"><span class="ic">💰</span><b id="vDp">24</b></div>
+        <div class="stat" id="statWave"><span class="ic">🌊</span><b id="vWave">0/9</b></div>
+        <div class="stat mdt" id="statMdt"><span class="ic">🩺</span><span id="vMdt">MDT 未啟動</span></div>
+      </div>
+
+      <div id="bossbar" class="hidden">
+        <div class="bossHead">
+          <span id="bossName">胃癌原發腫瘤</span>
+          <span id="bossPhaseTeach"></span>
+        </div>
+        <div class="bossHpTrack"><div id="bossHpFill"></div></div>
+      </div>
+
+      <div id="toastLayer"></div>
+
+      <div id="inspect" class="hidden">
+        <button id="inspectClose">✕</button>
+        <div id="inspectBody"></div>
+      </div>
+
+      <div id="squadbar"></div>
+
+      <div id="startOverlay">
+        <div class="startCard">
+          <h1>Onco Defense<br /><span>腫瘤攻防戰</span></h1>
+          <p>部署專科醫師，依照癌細胞的抗性選擇正確治療。集結內科＋外科＋放射腫瘤科可觸發 <b>MDT 多專科會議</b>（全隊傷害 ×2）。守住胃癌關，撐過所有波次並擊敗胃癌王。</p>
+          <button id="startBtn">開始關卡：胃／上消化道</button>
+        </div>
+      </div>
+
+      <div id="endOverlay" class="hidden">
+        <div class="startCard">
+          <h1 id="endTitle">—</h1>
+          <p id="endBody"></p>
+          <button id="restartBtn">重新開始</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./src/game/main.js"></script>
+  </body>
+</html>
