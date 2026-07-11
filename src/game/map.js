@@ -1,27 +1,14 @@
-// Battlefield for the gastric (stomach) level. See docs/GAME_DESIGN.md §10.
+// Battlefield map factory. See docs/GAME_DESIGN.md §10, §14.
 //
-// MVP note (§14): the full dungeon generator's procedural rooms/corridors
-// are not wired up yet, so this level's path is hand-authored — an
-// axis-aligned polyline standing in for a blood-vessel/lymphatic route
-// through the stomach, from the primary tumor (entrance) to the patient's
-// vital core. Deploy tiles (ground = melee, highground = ranged) are
-// derived procedurally from the path so future maps only need a new
-// waypoint list, not new tile-placement code — this is the seam where the
-// existing procedural generator's `bfs`/room-graph output can later be fed
-// in instead of a hand list (§14 roadmap).
+// Each level supplies a hand-authored axis-aligned waypoint polyline
+// (see data/maps.js) standing in for a vessel/lymphatic route through that
+// organ. This module turns waypoints into everything downstream needs:
+// the rasterized cell-by-cell enemy path, and procedurally-derived
+// ground/highground deploy tiles flanking it. Nothing here is gastric- or
+// lung-specific — a new level is purely a new `data/maps.js` entry.
+import { levelById } from './data/maps.js';
 
 export const TILE_SIZE = 1.4;
-
-// Axis-aligned waypoints, in grid units. Each consecutive pair is a
-// straight horizontal or vertical segment (kept planar/non-self-crossing
-// by construction).
-export const PATH_WAYPOINTS = [
-  [1, 1], [1, 4], [4, 4], [4, 1], [7, 1], [7, 5],
-  [10, 5], [10, 2], [12, 2], [12, 8], [6, 8], [6, 9],
-];
-
-export const ENTRANCE = PATH_WAYPOINTS[0];
-export const CORE = PATH_WAYPOINTS[PATH_WAYPOINTS.length - 1];
 
 function key(x, z) {
   return `${x},${z}`;
@@ -79,12 +66,26 @@ export function buildDeployTiles(pathCells) {
   return [...ground.values(), ...highground.values()];
 }
 
-export const PATH_CELLS = rasterizePath(PATH_WAYPOINTS);
-export const DEPLOY_TILES = buildDeployTiles(PATH_CELLS);
-
 export function gridToWorld(x, z) {
   return { x: x * TILE_SIZE, z: z * TILE_SIZE };
 }
 
-// Total path length in grid steps — used to normalize progress-along-path.
-export const PATH_LENGTH = PATH_CELLS.length - 1;
+// Builds the full playable-map state for one level: rasterized path,
+// deploy tiles, entrance/core markers, and path length for progress calc.
+export function buildMap(levelId) {
+  const level = levelById[levelId];
+  if (!level || !level.waypoints) throw new Error(`No map data for level "${levelId}"`);
+  const pathCells = rasterizePath(level.waypoints);
+  const deployTiles = buildDeployTiles(pathCells);
+  return {
+    id: levelId,
+    level,
+    tileSize: TILE_SIZE,
+    waypoints: level.waypoints,
+    pathCells,
+    deployTiles,
+    entrance: level.waypoints[0],
+    core: level.waypoints[level.waypoints.length - 1],
+    pathLength: pathCells.length - 1,
+  };
+}

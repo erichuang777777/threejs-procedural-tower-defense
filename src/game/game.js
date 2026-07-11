@@ -3,20 +3,45 @@
 // (economy/lives), §9b (deployment).
 import { DOCTORS, doctorById } from './data/doctors.js';
 import { ENEMY_UNITS } from './data/enemies.js';
-import { GASTRIC_LEVEL_WAVES } from './data/waves.js';
+import { GASTRIC_LEVEL_WAVES, LUNG_LEVEL_WAVES } from './data/waves.js';
 import { BOSS_PHASES } from './data/bossPhases.js';
 import { LIVES_START } from './data/deployment.js';
 import { Doctor, Enemy } from './entities.js';
 import { DeploymentManager } from './deploy.js';
 import { WaveSpawner, BossController } from './waveEngine.js';
 import { computeDamage, activeSynergies, synergyDamageMult } from './combat.js';
+import { buildMap } from './map.js';
+import { getDoctorBonus } from './meta.js';
 
 const DEATH_ANIM_DURATION = 0.5;
 const MELEE_ATTACK_INTERVAL = 1.0; // enemy contact-attack tick while blocked
 
+// Level id -> wave script. Adding a level = one entry here + a data/maps.js
+// waypoint list + level-specific ENEMY_UNITS/BOSS_PHASES — nothing else
+// in the engine changes (§0 modularity).
+const WAVES_BY_LEVEL = { gastric: GASTRIC_LEVEL_WAVES, lung: LUNG_LEVEL_WAVES };
+
+// Meta promotions/talents (§8, meta.js) are permanent, applied on deploy —
+// they scale the doctor's base data, not baked into the DOCTORS registry.
+function applyMetaBonus(baseDef) {
+  const bonus = getDoctorBonus(baseDef.id);
+  if (!bonus || (bonus.statMult === 1 && !bonus.talent)) return baseDef;
+  const fx = bonus.talent?.effect || {};
+  return {
+    ...baseDef,
+    atk: Math.round(baseDef.atk * bonus.statMult * (fx.atkMult ?? 1)),
+    hp: Math.round(baseDef.hp * bonus.statMult * (fx.hpMult ?? 1)),
+    range: baseDef.range + (fx.rangeAdd ?? 0),
+    critChance: Math.min(0.95, (baseDef.critChance ?? 0) + (fx.critChanceAdd ?? 0)),
+    blockCount: baseDef.blockCount + (fx.blockAdd ?? 0),
+  };
+}
+
 export class Game {
-  constructor() {
-    this.deployment = new DeploymentManager();
+  constructor(levelId = 'gastric') {
+    this.levelId = levelId;
+    this.map = buildMap(levelId);
+    this.deployment = new DeploymentManager(this.map);
     this.doctors = [];
     this.enemies = [];
     this.lives = LIVES_START;
@@ -30,7 +55,7 @@ export class Game {
     this._listeners = {};
     this._activeSynergyIds = new Set();
 
-    this.waveSpawner = new WaveSpawner(GASTRIC_LEVEL_WAVES, {
+    this.waveSpawner = new WaveSpawner(WAVES_BY_LEVEL[levelId] || GASTRIC_LEVEL_WAVES, {
       spawn: (enemyId) => this.spawnEnemy(enemyId),
       onWaveStart: (i, wave) => this.emit('waveStart', { index: i, wave, total: this.waveSpawner.totalWaves }),
       onAllComplete: () => this.emit('wavesComplete', {}),
@@ -46,12 +71,13 @@ export class Game {
 
   // --- Deployment -------------------------------------------------------
   tryDeploy(doctorDefId, tile) {
-    const def = doctorById[doctorDefId];
-    if (!def) return { ok: false, reason: 'unknown_doctor' };
-    const check = this.deployment.canDeploy({ doctorDef: def, tile, currentSquadSize: this.doctors.length });
+    const baseDef = doctorById[doctorDefId];
+    if (!baseDef) return { ok: false, reason: 'unknown_doctor' };
+    const check = this.deployment.canDeploy({ doctorDef: baseDef, tile, currentSquadSize: this.doctors.length });
     if (!check.ok) return check;
+    const def = applyMetaBonus(baseDef);
     const inst = new Doctor(def, tile);
-    this.deployment.commitDeploy(inst, tile, def.deployCost);
+    this.deployment.commitDeploy(inst, tile, baseDef.deployCost);
     this.doctors.push(inst);
     this.emit('doctorDeployed', { doctor: inst });
     return { ok: true, doctor: inst };
@@ -73,7 +99,7 @@ export class Game {
   spawnEnemy(enemyId, opts = {}) {
     const def = ENEMY_UNITS[enemyId];
     if (!def) return null;
-    const inst = new Enemy(def, opts);
+    const inst = new Enemy(def, this.map, opts);
     if (opts.pathPos != null) inst.pathPos = opts.pathPos;
     this.enemies.push(inst);
     if (def.isBoss) {

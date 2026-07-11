@@ -1,10 +1,10 @@
 // Deployment economy: DP regen/cost, squad slot cap, retreat/redeploy
 // cooldown, tile occupancy. See docs/GAME_DESIGN.md §9b.
 import { DEPLOYMENT } from './data/deployment.js';
-import { DEPLOY_TILES } from './map.js';
 
 export class DeploymentManager {
-  constructor(config = DEPLOYMENT) {
+  constructor(map, config = DEPLOYMENT) {
+    this.map = map;
     this.config = config;
     this.dp = config.dpStart;
     this.occupied = new Map(); // tileKey -> doctorInstanceId
@@ -68,6 +68,6 @@ export class DeploymentManager {
   }
 
   availableTiles(type) {
-    return DEPLOY_TILES.filter((t) => t.type === type && this.isTileFree(t));
+    return this.map.deployTiles.filter((t) => t.type === type && this.isTileFree(t));
   }
 }

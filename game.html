@@ -35,11 +35,28 @@
 
       <div id="squadbar"></div>
 
-      <div id="startOverlay">
-        <div class="startCard">
+      <div id="levelSelectOverlay">
+        <div class="startCard wide">
           <h1>Onco Defense<br /><span>腫瘤攻防戰</span></h1>
-          <p>部署專科醫師，依照癌細胞的抗性選擇正確治療。集結內科＋外科＋放射腫瘤科可觸發 <b>MDT 多專科會議</b>（全隊傷害 ×2）。守住胃癌關，撐過所有波次並擊敗胃癌王。</p>
-          <button id="startBtn">開始關卡：胃／上消化道</button>
+          <p>台大醫院腫瘤團隊指揮室 — 選擇章節，部署專科醫師，依照癌細胞的抗性選擇正確治療。集結內科＋外科＋放射腫瘤科可觸發 <b>MDT 多專科會議</b>（全隊傷害 ×2）。</p>
+          <div class="metaRow">
+            <span class="ic">🧪</span> 研究點數 <b id="vResearchPoints">0</b>
+            <button id="openRosterBtn" class="linkBtn">醫師名冊 / 晉升 →</button>
+          </div>
+          <div id="levelList" class="levelList"></div>
+        </div>
+      </div>
+
+      <div id="rosterOverlay" class="hidden">
+        <div class="startCard wide">
+          <div class="rosterHead">
+            <h2>醫師名冊 — 晉升與天賦</h2>
+            <button id="closeRosterBtn">✕ 返回</button>
+          </div>
+          <div class="metaRow">
+            <span class="ic">🧪</span> 研究點數 <b id="vResearchPoints2">0</b>
+          </div>
+          <div id="rosterList" class="rosterList"></div>
         </div>
       </div>
 
@@ -47,7 +64,10 @@
         <div class="startCard">
           <h1 id="endTitle">—</h1>
           <p id="endBody"></p>
-          <button id="restartBtn">重新開始</button>
+          <div class="rowGap">
+            <button id="rosterFromEndBtn">醫師名冊 / 晉升</button>
+            <button id="restartBtn">回到章節選擇</button>
+          </div>
         </div>
       </div>
     </div>

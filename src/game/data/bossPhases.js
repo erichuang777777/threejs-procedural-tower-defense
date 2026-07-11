@@ -36,4 +36,40 @@ export const BOSS_PHASES = {
       teach: '轉移/腹膜擴散：手術已無效，只能倚靠全身化療與免疫治療；持續有循環腫瘤細胞擴散。',
     },
   ],
+
+  // Multi-phase lung cancer boss — teaches the NSCLC treatment algorithm:
+  // resectable -> unresectable locally advanced -> driver-mutation-positive
+  // -> PD-L1-high metastatic, each with a different standard-of-care.
+  lung_boss: [
+    {
+      id: 'early',
+      hpPct: 1.0,
+      familyStage: 'lung_early',
+      flags: [],
+      teach: '早期可切除肺癌：手術根治性切除為首選。',
+    },
+    {
+      id: 'locally_advanced',
+      hpPct: 0.7,
+      familyStage: 'lung_advanced',
+      flags: [],
+      summon: { enemyId: 'lung_node', intervalSec: 6 },
+      teach: '局部晚期不可切除肺癌：同步化學放射治療（CCRT）為標準；縱膈腔淋巴結開始轉移。',
+    },
+    {
+      id: 'driver_mutation',
+      hpPct: 0.45,
+      familyStage: 'lung_driver',
+      flags: ['shielded'],
+      teach: '帶 EGFR/ALK 驅動突變：標靶治療（TKI）為晚期首選，優先於化療。',
+    },
+    {
+      id: 'metastatic_pdl1',
+      hpPct: 0.2,
+      familyStage: 'lung_pdl1',
+      flags: [],
+      summon: { enemyId: 'lung_ctc', intervalSec: 4 },
+      teach: '轉移且 PD-L1 高表現：以免疫檢查點抑制劑為主，持續有循環腫瘤細胞擴散。',
+    },
+  ],
 };
