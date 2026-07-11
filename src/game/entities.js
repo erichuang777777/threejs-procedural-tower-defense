@@ -2,7 +2,7 @@
 // a parallel "view" (THREE.Sprite + SpriteAnimator) per entity id and
 // syncs position/animState from these each tick. See docs/GAME_DESIGN.md
 // §5 (doctors), §6 (enemies).
-import { gridToWorld, PATH_CELLS, PATH_LENGTH } from './map.js';
+import { gridToWorld } from './map.js';
 
 let _id = 0;
 const nextId = () => `e${++_id}`;
@@ -77,18 +77,22 @@ export class Doctor {
 }
 
 export class Enemy {
-  // `def` = an ENEMY_UNITS entry. `overrides` lets boss phases swap
-  // familyStage/markers/flags/hp at runtime without mutating shared data.
-  constructor(def, overrides = {}) {
+  // `def` = an ENEMY_UNITS entry. `map` = this level's buildMap() result
+  // (path cells/length — enemies from different levels never coexist, but
+  // this keeps Enemy Three.js/level-agnostic, same spirit as Doctor).
+  // `overrides` lets boss phases swap familyStage/markers/flags/hp at
+  // runtime without mutating shared data.
+  constructor(def, map, overrides = {}) {
     this.entityKind = 'enemy';
     this.id = nextId();
     this.def = def;
+    this.map = map;
     this.unitId = def.id;
     this.name = def.name;
     this.familyId = def.familyId;
     this.archetypeId = def.archetypeId;
     this.familyStage = overrides.familyStage || def.familyStage;
-    this.markers = overrides.markers || [];
+    this.markers = overrides.markers || def.markers || [];
     this.flags = new Set([...(def.flags || []), ...(overrides.flags || [])]);
     this.isBoss = !!def.isBoss;
     this.maxHp = overrides.hp ?? def.hp;
@@ -119,29 +123,32 @@ export class Enemy {
   }
 
   get progressFrac() {
-    return this.pathPos / PATH_LENGTH;
+    return this.pathPos / this.map.pathLength;
   }
 
   worldPosition() {
-    const idx = Math.min(Math.floor(this.pathPos), PATH_CELLS.length - 1);
-    const nextIdx = Math.min(idx + 1, PATH_CELLS.length - 1);
+    const cells = this.map.pathCells;
+    const idx = Math.min(Math.floor(this.pathPos), cells.length - 1);
+    const nextIdx = Math.min(idx + 1, cells.length - 1);
     const frac = this.pathPos - idx;
-    const a = gridToWorld(PATH_CELLS[idx][0], PATH_CELLS[idx][1]);
-    const b = gridToWorld(PATH_CELLS[nextIdx][0], PATH_CELLS[nextIdx][1]);
+    const a = gridToWorld(cells[idx][0], cells[idx][1]);
+    const b = gridToWorld(cells[nextIdx][0], cells[nextIdx][1]);
     return { x: a.x + (b.x - a.x) * frac, z: a.z + (b.z - a.z) * frac };
   }
 
   currentCell() {
-    const idx = Math.min(Math.round(this.pathPos), PATH_CELLS.length - 1);
-    return PATH_CELLS[idx];
+    const cells = this.map.pathCells;
+    const idx = Math.min(Math.round(this.pathPos), cells.length - 1);
+    return cells[idx];
   }
 
   // Continuous (float) grid position, for smooth doctor range checks.
   currentGridPos() {
-    const idx = Math.min(Math.floor(this.pathPos), PATH_CELLS.length - 1);
-    const nextIdx = Math.min(idx + 1, PATH_CELLS.length - 1);
+    const cells = this.map.pathCells;
+    const idx = Math.min(Math.floor(this.pathPos), cells.length - 1);
+    const nextIdx = Math.min(idx + 1, cells.length - 1);
     const frac = this.pathPos - idx;
-    const a = PATH_CELLS[idx], b = PATH_CELLS[nextIdx];
+    const a = cells[idx], b = cells[nextIdx];
     return { x: a[0] + (b[0] - a[0]) * frac, z: a[1] + (b[1] - a[1]) * frac };
   }
 
@@ -154,6 +161,6 @@ export class Enemy {
   }
 
   reachedCore() {
-    return this.pathPos >= PATH_LENGTH;
+    return this.pathPos >= this.map.pathLength;
   }
 }

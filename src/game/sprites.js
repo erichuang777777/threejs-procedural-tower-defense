@@ -82,7 +82,47 @@ function buildTexture(sheetCanvas, cols) {
 const DOCTOR_GRID = 32;
 const DOCTOR_CELL = DOCTOR_GRID * SCALE;
 
-function drawDoctorFrame({ palette, weaponColor, pose, flash }) {
+// Signature held prop per treatment type — drawn in every pose (not just
+// the attack flash) so each specialty reads as a distinct silhouette even
+// standing still, the way a held weapon/staff reads in reference pixel-art
+// character sheets.
+function drawHeldProp(ctx, x, y, damageTypeId, color) {
+  switch (damageTypeId) {
+    case 'surgery': // scalpel — dark handle, angled silver blade
+      ctx.fillStyle = '#3a2f26'; ctx.fillRect(x - 1, y + 1, 2, 2);
+      ctx.fillStyle = '#e9edf4'; ctx.fillRect(x + 1, y, 2, 1); ctx.fillRect(x + 2, y - 1, 1, 1);
+      break;
+    case 'chemo': // IV vial with coloured fluid
+      ctx.fillStyle = '#2a2a2a'; ctx.fillRect(x, y - 2, 2, 1);
+      ctx.fillStyle = '#d7dde6'; ctx.fillRect(x, y - 1, 2, 2);
+      ctx.fillStyle = color; ctx.fillRect(x, y, 2, 1);
+      break;
+    case 'radiation': { // emitter wand with a glowing tip
+      ctx.fillStyle = '#5b6272'; ctx.fillRect(x - 1, y, 3, 1);
+      circleFill(ctx, x + 2.5, y + 0.5, 1.2, color, 0.95);
+      circleFill(ctx, x + 2.5, y + 0.5, 0.6, '#ffffff', 0.8);
+      break;
+    }
+    case 'immuno': // syringe, glowing plunger
+      ctx.fillStyle = '#c7ccd6'; ctx.fillRect(x - 1, y, 3, 1);
+      ctx.fillStyle = '#3a3f4a'; ctx.fillRect(x + 2, y, 1, 1);
+      circleFill(ctx, x - 1.5, y + 0.5, 1, color, 0.9);
+      break;
+    case 'targeted': // precision dart, coloured tip
+      ctx.fillStyle = '#e9edf4'; ctx.fillRect(x - 1, y, 3, 1);
+      ctx.fillStyle = color; ctx.fillRect(x + 2, y - 1, 1, 2);
+      break;
+    case 'hormone':
+      ctx.fillStyle = '#d7dde6'; ctx.fillRect(x, y - 1, 2, 2);
+      ctx.fillStyle = color; ctx.fillRect(x, y - 2, 2, 1);
+      break;
+    default: // ablation / fallback
+      ctx.fillStyle = '#5b6272'; ctx.fillRect(x - 1, y, 2, 2);
+      ctx.fillStyle = color; ctx.fillRect(x + 1, y, 1, 1);
+  }
+}
+
+function drawDoctorFrame({ palette, damageTypeId, weaponColor, pose, flash }) {
   const { c, ctx } = makeCanvas(DOCTOR_GRID, DOCTOR_GRID);
   const bob = pose === 'idleB' ? 1 : 0;
   const lean = pose === 'strike' ? 1 : pose === 'hurt' ? -1 : 0;
@@ -175,6 +215,8 @@ function drawDoctorFrame({ palette, weaponColor, pose, flash }) {
   ctx.fillRect(ax + 5, ay + 9, 3 + Math.max(0, armFwd), 1);
   ctx.fillStyle = skin;
   ctx.fillRect(fx - 1, ay + 9, 2, 3);
+  // signature held prop, visible in every pose
+  if (pose !== 'down') drawHeldProp(ctx, fx + 1, ay + 9, damageTypeId, weaponColor);
 
   // weapon / treatment flash at hand
   if (pose === 'strike' || pose === 'skill' || pose === 'windup') {
@@ -226,7 +268,7 @@ export function buildDoctorSprite(doctor) {
   const cols = seq.length;
   const { c: sheet, ctx: sheetCtx } = makeCanvas(cols * DOCTOR_CELL, DOCTOR_CELL);
   seq.forEach(([, pose], i) => {
-    const frame = drawDoctorFrame({ palette: doctor.palette, weaponColor, pose, flash: pose === 'hurt' });
+    const frame = drawDoctorFrame({ palette: doctor.palette, damageTypeId: doctor.damageType, weaponColor, pose, flash: pose === 'hurt' });
     blit(sheetCtx, frame, i, DOCTOR_CELL);
   });
   const texture = buildTexture(sheet, cols);

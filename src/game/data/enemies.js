@@ -33,6 +33,10 @@ export const RESIST_MATRIX = {
     gastric_late: { surgery: 0.5, chemo: 3.0 },
     gastric_her2: { surgery: 0.5, chemo: 0.5, radiation: 0.5, targeted: 3.0 },
     gastric_metastatic: { surgery: 0.5, chemo: 3.0, immuno: 3.0 },
+    lung_early: { surgery: 3.0 },
+    lung_advanced: { surgery: 0.5, chemo: 3.0, radiation: 3.0 },
+    lung_driver: { surgery: 0.5, chemo: 0.5, radiation: 0.5, targeted: 3.0 },
+    lung_pdl1: { surgery: 0.5, chemo: 0.5, radiation: 0.5, immuno: 3.0 },
   },
   archetype: {
     rapid: { chemo: 3.0 },
@@ -98,5 +102,57 @@ export const ENEMY_UNITS = {
     id: 'gastric_boss', name: '胃癌原發腫瘤', familyId: 'gastric', archetypeId: 'solid',
     familyStage: 'gastric_early', hp: 3400, speed: 0.32, contactDamage: 34, xpReward: 120,
     spriteId: 'gastric_boss', flags: ['boss'], isBoss: true,
+  },
+
+  // --- Lung level -------------------------------------------------------
+  lung_rapid: {
+    id: 'lung_rapid', name: '分裂型肺癌細胞', familyId: 'lung', archetypeId: 'rapid',
+    familyStage: 'lung_early', hp: 24, speed: 1.8, contactDamage: 6, xpReward: 4,
+    spriteId: 'lung_rapid', flags: [],
+  },
+  lung_solid: {
+    id: 'lung_solid', name: '肺部實體瘤塊', familyId: 'lung', archetypeId: 'solid',
+    familyStage: 'lung_early', hp: 150, speed: 0.5, contactDamage: 15, xpReward: 8,
+    spriteId: 'lung_solid', flags: [],
+  },
+  lung_hypoxic: {
+    id: 'lung_hypoxic', name: '缺氧肺癌細胞', familyId: 'lung', archetypeId: 'hypoxic',
+    familyStage: 'lung_early', hp: 100, speed: 0.5, contactDamage: 10, xpReward: 7,
+    spriteId: 'lung_hypoxic', flags: [],
+  },
+  lung_resistant: {
+    id: 'lung_resistant', name: '抗藥肺癌細胞', familyId: 'lung', archetypeId: 'resistant',
+    familyStage: 'lung_early', hp: 80, speed: 0.8, contactDamage: 9, xpReward: 6,
+    spriteId: 'lung_resistant', flags: [],
+  },
+  lung_ctc: {
+    id: 'lung_ctc', name: '循環肺癌細胞', familyId: 'lung', archetypeId: 'ctc',
+    familyStage: 'lung_advanced', hp: 34, speed: 2.1, contactDamage: 5, xpReward: 5,
+    spriteId: 'lung_ctc', flags: ['flying'],
+  },
+  lung_driver: {
+    id: 'lung_driver', name: 'EGFR/ALK 驅動突變細胞', familyId: 'lung', archetypeId: 'solid',
+    familyStage: 'lung_driver', hp: 110, speed: 0.6, contactDamage: 12, xpReward: 10,
+    spriteId: 'lung_driver', flags: [],
+  },
+  lung_pdl1: {
+    id: 'lung_pdl1', name: 'PD-L1 高表現細胞', familyId: 'lung', archetypeId: 'stem',
+    familyStage: 'lung_pdl1', hp: 95, speed: 0.7, contactDamage: 11, xpReward: 10,
+    spriteId: 'lung_pdl1', flags: ['selfHeal'], healPerSec: 5,
+  },
+  lung_node: {
+    id: 'lung_node', name: '縱膈腔淋巴結轉移灶', familyId: 'lung', archetypeId: 'mets',
+    familyStage: 'lung_advanced', hp: 46, speed: 1.0, contactDamage: 8, xpReward: 5,
+    spriteId: 'lung_node', flags: ['splitOnDeath'], splitInto: { enemyId: 'lung_shard', count: 2 },
+  },
+  lung_shard: {
+    id: 'lung_shard', name: '轉移灶碎片', familyId: 'lung', archetypeId: 'rapid',
+    familyStage: 'lung_advanced', hp: 18, speed: 1.4, contactDamage: 4, xpReward: 2,
+    spriteId: 'lung_shard', flags: [],
+  },
+  lung_boss: {
+    id: 'lung_boss', name: '肺癌原發腫瘤', familyId: 'lung', archetypeId: 'solid',
+    familyStage: 'lung_early', hp: 3800, speed: 0.3, contactDamage: 36, xpReward: 140,
+    spriteId: 'lung_boss', flags: ['boss'], isBoss: true,
   },
 };
